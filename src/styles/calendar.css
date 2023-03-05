@@ -9,6 +9,10 @@
 }
 
 .react-datepicker__input-container {
+  right: 0;
+  top: 0;
+  width: 95px !important;
+  height: 32px !important;
   position: absolute !important;
 }
 
@@ -57,6 +61,9 @@
   color: #8e8e8e !important;
 }
 
+.react-datepicker__day--disabled {
+  text-decoration: line-through !important;
+}
 .checkout.react-datepicker__day--disabled .group {
   color: #ccc !important;
   text-decoration: line-through !important;

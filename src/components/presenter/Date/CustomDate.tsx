@@ -1,18 +1,35 @@
 import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
-import type { Locale } from "date-fns";
+import { getDate, Locale } from "date-fns";
 import { useMediaQuery } from "react-responsive";
+import { isInArray } from "@/lib/utils";
 
 type CustomDateProps = {
   startDate: Date | null;
   endDate: Date | null;
+  maxDate: Date | undefined;
   handleChange: (dates: (Date | null)[]) => void;
   locale: Locale;
+  parseReservationPmList: Date[];
+  parseReservationAllList: Date[];
+  convertDateToColor: (date: Date) => string;
   convertDateToStr: (date: Date) => string;
 };
 
-export default function CustomDate({ startDate, endDate, handleChange, locale, convertDateToStr }: CustomDateProps) {
+export default function CustomDate({ startDate, endDate, handleChange, maxDate, locale, parseReservationPmList, parseReservationAllList, convertDateToColor, convertDateToStr }: CustomDateProps) {
   const isDesktop = useMediaQuery({ query: "(min-width: 1024px)" });
+
+  const renderDayContents = (day: number, date: Date) => {
+    return (
+      <>
+        <div className="group w-full relative inline-block duration-300">
+          <span className="text-sm">{getDate(date)}</span>
+          {!startDate && isInArray(parseReservationPmList, date) && <span className="absolute hidden group-hover:flex -left-10 -top-2 -translate-y-full w-25 px-2 py-1 bg-gray-700 rounded-lg text-center text-white text-sm">체크아웃만 가능</span>}
+        </div>
+      </>
+    );
+  };
+
   return (
     <>
       <DatePicker
@@ -23,12 +40,16 @@ export default function CustomDate({ startDate, endDate, handleChange, locale, c
         startDate={startDate}
         endDate={endDate}
         minDate={new Date()}
+        maxDate={maxDate}
         locale={locale}
+        renderDayContents={renderDayContents}
+        excludeDates={parseReservationAllList}
         monthsShown={isDesktop ? 2 : 1}
         showPopperArrow={false}
         dateFormat="yyyyMMdd"
         shouldCloseOnSelect={false}
         popperPlacement="auto"
+        dayClassName={(date) => convertDateToColor(date)}
         renderCustomHeader={({ monthDate, decreaseMonth, increaseMonth, customHeaderCount }) => (
           <div>
             {new Date() > monthDate || customHeaderCount === 1 ? (

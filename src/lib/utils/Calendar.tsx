@@ -1,29 +1,55 @@
-import { addMonths, min, parse, setDate } from "date-fns";
+import { min, parse } from "date-fns";
+
+export const handleReservationList = (reservationList: string[] | undefined) => {
+  const splitReservationList = reservationList?.map((reservation) => reservation.split("_"));
+  const parseReservationList: { [key: string]: string } = {};
+
+  splitReservationList?.map((splitReservation) => {
+    if (parseReservationList[splitReservation[0]]) parseReservationList[splitReservation[0]] = "ALL";
+    else parseReservationList[splitReservation[0]] = splitReservation[1];
+  });
+
+  const reservationAllList = Object.keys(parseReservationList).filter((key) => parseReservationList[key] === "ALL");
+  const reservationPmList = Object.keys(parseReservationList).filter((key) => parseReservationList[key] === "PM");
+
+  const parseReservationAllList = reservationAllList.map((key) => parse(key, "yyyyMMdd", new Date()));
+  const parseReservationPmList = reservationPmList.map((key) => parse(key, "yyyyMMdd", new Date()));
+
+  return [parseReservationAllList, parseReservationPmList];
+};
+
+export const verifyOnlyPossibleCheckout = (startDate: Date | null, parseReservationPmList: Date[]) => {
+  if (startDate && isInArray(parseReservationPmList, startDate)) return true;
+  return false;
+};
+
+export const verifyAll = (startDate: Date | null, endDate: Date | null, parseReservationPmList: Date[]) => {
+  if (verifyOnlyPossibleCheckout(startDate, parseReservationPmList)) {
+    console.log("체크아웃만 가능한 날짜입니다.");
+    return [];
+  }
+  return [startDate, endDate];
+};
 
 export const countHoliday = (DayOfInterval: Date[], parseHoliday: Date[]): number => {
   return DayOfInterval?.filter((item) => isInArray(parseHoliday, item) || convertDayOfTheWeek(item) === "일" || convertDayOfTheWeek(item) === "토").length;
 };
 
-export const handleMaxDate = (parsereservationAllList: Date[], currentDateList: (Date | null)[], ownershipInfo: boolean | undefined, permitOwnerDate: number, permitGuestDate: number) => {
+export const handleMaxDate = (parseReservationAllList: Date[], currentDateList: (Date | null)[]) => {
   const maxDateList: (Date | undefined)[] = [];
 
-  parsereservationAllList.map((reservation) => {
+  parseReservationAllList.map((reservation) => {
     if ((currentDateList[0] as Date) > reservation) return;
     maxDateList.push(reservation);
   });
 
-  if (currentDateList[1] !== null || maxDateList.length < 1) return addMonths(setDate(new Date(), 0), ownershipInfo ? permitOwnerDate : permitGuestDate);
+  if (currentDateList[1] !== null || maxDateList.length < 1) return;
 
   return min(maxDateList as Date[]);
 };
 
-export const convertDateColor = (parsereservationPmList: Date[], date: Date, holiday: string[] | undefined) => {
-  const dayName = convertDayOfTheWeek(date);
-  const parseHoliday = holiday?.map((key) => parse(key, "yyyyMMdd", new Date()));
-
-  if (isInArray(parsereservationPmList, date)) return "checkout";
-
-  if (isInArray(parseHoliday, date) || ((dayName === "일" || dayName === "토") && date > new Date())) return "holiday";
+export const convertDateToColor = (parseReservationPmList: Date[], date: Date) => {
+  if (isInArray(parseReservationPmList, date)) return "checkout";
 
   return "";
 };
